@@ -15,10 +15,41 @@
 import express from 'express';
 import {pinoHttp, logger} from './utils/logging.js';
 
+const mysql = require('promise-mysql');
 const app = express();
 
 // Use request-based logger for log correlation
 app.use(pinoHttp);
+
+
+const createUnixSocketPool = async config => {
+
+  return mysql.createPool({
+    user: process.env.DB_USER, // e.g. 'my-db-user'
+    password: process.env.DB_PASS, // e.g. 'my-db-password'
+    database: process.env.DB_NAME, // e.g. 'my-database'
+    socketPath: process.env.INSTANCE_UNIX_SOCKET, // e.g. '/cloudsql/project:region:instance'
+    // Specify additional properties here.
+    ...config,
+  });
+};
+
+const pool = await createUnixSocketPool({
+});
+
+app.get('/test', async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.query('SELECT * FROM bodies');
+    res.json(rows);
+    connection.release();
+  } catch (err) {
+    logger.error(err);
+    res.status(500).send('Error querying the database');
+  }
+}
+);
+
 
 // Example endpoint
 app.get('/', async (req, res) => {

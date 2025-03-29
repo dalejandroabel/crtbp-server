@@ -16,6 +16,7 @@ import app from './app.js';
 import {logger, initLogCorrelation} from './utils/logging.js';
 import {fetchProjectId} from './utils/metadata.js';
 
+
 /**
  * Initialize app and start Express server
  */
